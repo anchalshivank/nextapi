@@ -1,7 +1,8 @@
 import os
 import subprocess
 import argparse
-
+import sqlalchemy
+import alembic
 def update_database(service_dir):
     """
     Update the database schema for a service
@@ -10,16 +11,23 @@ def update_database(service_dir):
         service_dir (str): Path to the service directory
     """
     
-    alembic_ini = os.path.join(service_dir,"alembic.ini")
-    
-    if not os.path.exists(alembic_ini):
-        print(f"No Alembic configuration found for {service_dir}")
+    currrent_dir = os.path.abspath(os.getcwd())
+    try:
+        os.chdir(service_dir)
+        # alembic_ini = os.path.join(service_dir,"alembic.ini")
         
-        return
-    
-    subprocess.run(['alembic', "-c", alembic_ini, 'revision', "--autogenerate", "-m", "Updating database schema"])
-    
-    subprocess.run(["alembic","-c", alembic_ini, "upgrade", "head"])
+        # if not os.path.exists(alembic_ini):
+        #     print(f"No Alembic configuration found for {service_dir}")
+            
+        #     return
+        
+        subprocess.run(['alembic', 'revision', "--autogenerate", "-m", "Updating database schema"])
+        
+        subprocess.run(["alembic","upgrade", "head"])
+    except sqlalchemy.exc.NoSuchModuleError:
+        print("Please edit the sqlalchemy.url = driver://user:pass@localhost/dbname in your alembic.ini file")
+    finally:
+        os.chdir(currrent_dir)
     
     
     
